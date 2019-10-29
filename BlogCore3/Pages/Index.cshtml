@@ -1,0 +1,247 @@
+﻿
+@page
+@model BlogCore3.Pages.BlogPostModel
+
+@{
+    ViewData["Title"] = "BlogPost";
+}
+
+
+@*<h1>@ViewData["heading"]</h1>*@
+
+<div class="container small">
+
+    <div class="row">
+        <div class="col-3 card bg-light text-warning" style="overflow-y: auto; height: 600px; margin-right: 10px;">
+           
+            
+            <div class="card-body">
+                <div id="result">
+
+                </div>
+            </div>
+            <ul class="pagination">
+                <li class="page-item" id="prev"><a class="page-link">Previous</a></li>
+                <li class="page-item next" id="next"><a class="page-link">Next </a></li>
+
+
+            </ul>
+        </div>
+        <div class="col-6 card bg-light text-dark" style="height: 600px;">
+
+            
+
+            <div class="card-body">
+                
+                <div class="form-group">
+                    <div class="col-4">Author frist name:</div>
+                    <div class="col-6"><input type="text" id="fristInput" class="form-control"/></div>
+                </div>
+                <div class="form-group">
+                    <div class="col-4">Author last name:</div>
+                    <div class="col-6"><input type="text" id="lastInput" class="form-control"/></div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-4">Title:</div>
+                    <div class="col-6"><input type="text" id="TitleInput" class="form-control"/></div>
+                </div>
+                <div class="form-group">
+                    <div class="col-4">SubTitle:</div>
+                    <div class="col-6"><input type="text" id="SubTitleInput" class="form-control"/></div>
+                </div>
+                <div class="form-group">
+                    <div class="col-4">Image:</div>
+                    <div class="col-6"><input type="text" id="imgInput" class="form-control" required="required"/></div>
+                </div>
+                <div class="form-group">
+                    <div class="col-4">Body:</div>
+                    <div class="col-6"><input type="text" id="BodyInput" class="form-control"/></div>
+                    
+                </div>
+
+                <div class="form-group">token:<input type="text" id="tokenInput" class="form-control" /></div>
+                <div class="row">
+                    <div class="col-6">
+                        @* <input type="button" id="sendButton" value="GenerateToken" class="btn btn-sm btn-danger" />*@
+                        <input type="button" id="btnSubmit" value="Post blog" class="btn btn-sm btn-danger"/>
+                        @* <button id="pushbtn" onclick="Send()">generate token</button>*@
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-2 ">
+
+            <div class="toast" data-autohide="false">
+                <div class="toast-header">
+                    <strong class="mr-auto text-primary">New post</strong>
+
+                    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
+                </div>
+                <div class="toast-body">
+                    <div class="col-6">
+                        <ul id="messagesList"></ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+    <script src="~/js/jquery/jquery.js"></script>
+    <script>
+        
+        $(document).ready(function() {
+
+            
+            
+            $("#btnSubmit").click(function() {
+
+                var first = $("#fristInput").val();
+                var last = $("#lastInput").val();
+                var title = $("#TitleInput").val();
+                var subtitle = $("#SubTitleInput").val();
+
+                var Body = $("#BodyInput").val();
+
+                var blogPosts = {
+                    author: {
+                        first: first,
+                        last: last
+                    },
+                    title: title,
+                    subtitle: subtitle,
+                    date: null,
+                    imageUrl: "https://via.placeholder.com/150",
+                    body: Body
+                }
+                var options = {};
+                var ctokn = 'Bearer ' + $("#tokenInput").val().trim();
+                options.url = "/api/BlogPosts/PostBlogPosts";
+                options.type = "POST";
+                options.dataType = "application/json";
+               //options.contentType = "application/json;";
+                
+                options.headers = {
+                    Authorization:ctokn ,
+                 //  Accept:"application/json;"
+                }
+
+                options.data = {
+                    blogPosts:blogPosts
+
+            }
+                options.success = function(data) {
+
+
+                };
+                options.error = function(jqXHR,textStatus,x) {
+                    //$("#msg").html("Error while calling the Web API!");
+                  //  alert(textStatus + jqXHR.responseText);
+                   // alert(blogPosts);
+                    //console.log(jqXHR);
+                };
+                $.ajax(options);
+
+            });
+           
+            var pageId = 1;
+            
+            onajaxloadpage(pageId);
+                
+                loadTable(pageId);
+
+                $('#next').on('click',
+                    function() {
+                        pageId++;
+                        $("#result").empty();
+                        loadTable(pageId);
+
+                    });
+                $('#prev').on('click',
+                    function() {
+                        pageId--;
+                        $("#result").empty();
+                        loadTable(pageId);
+
+                    });
+
+            
+        });
+
+        var onajaxloadpage = function (pageId) {
+
+            var options = {};
+            options.url = "/api/Token";
+            options.type = "POST";
+            options.dataType = "json";
+
+            options.success = function(data) {
+                $("#tokenInput").val(data.token)
+                loadTable(pageId);
+                // $("#tokenInput").val(data.token);
+
+            };
+            options.error = function() {
+                $("#msg").html("Error while calling the Web API!");
+            };
+            $.ajax(options);   
+
+        }
+        var onajaxToken = function (pageId) {
+
+            var options = {};
+            options.url = "/api/Token";
+            options.type = "POST";
+            options.dataType = "json";
+
+            options.success = function(data) {
+                $("#tokenInput").val(data.token);
+               
+                // $("#tokenInput").val(data.token);
+
+            };
+            options.error = function() {
+                $("#msg").html("Error while calling the Web API!");
+            };
+            $.ajax(options);   
+
+        }
+        var loadTable = function(pageId) {
+            var options = {};
+            options.url = "/api/BlogPosts/GetBlogPostsIndex";
+            options.type = "GET";
+            options.dataType = "json";
+            options.headers = {
+                Authorization: 'Bearer ' +$("#tokenInput").val().trim()  }
+            // beforeSend: function (xhr, settings) { xhr.setRequestHeader('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NzIyOTYxNDgsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDQzMzgvIiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdDo0NDMzOC8ifQ.nWCVTFMTKaHpqaGRFPi69r8nI8gVbrCt_D27G5uo8LY'); }, //set tokenString before send
+            options.data = { pageIndex: pageId };
+            options.success = function(data) {
+
+                data.forEach(function(element) {
+                    $("#result").append("<h5>" +
+                        element.blogPostsId +
+                        "|" +
+                        element.title +
+                        "|" +
+                        element.subtitle +
+                        "</h5>");
+                    $("#result").append("<h6>" + element.author.first + " " + element.author.last + "</h6>");
+                    $("#result").append("<img src='" + element.imageUrl + "'  alt='Smiley face'>");
+
+
+                });
+            };
+            options.error = function() {
+                $("#msg").html("Error while calling the Web API!");
+            };
+            $.ajax(options);
+
+        } 
+    </script>
+    <script src="~/js/signalr/dist/browser/signalr.js"></script>
+    <script src="~/js/Notfication.js"></script>
